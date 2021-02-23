@@ -77,7 +77,11 @@ class vcu118Target (fpgaTarget, commonTarget):
                     serverThread.start()
                     printAndLog (f"Started TFTP server on port {listenPort}.",doPrint=False)
                     time.sleep(1)
-                    self.sendToTarget(f"boot -p {listenPort} {self.ipHost} {basename}\r\n")
+                    bootcmd = f"boot -p {listenPort} {self.ipHost} {basename}"
+                    if (getSetting('osImageExtraElf',self.targetId) != None):
+                        bootcmd += f" {os.path.basename(getSetting('osImageExtraElf',self.targetId))}"
+                    bootcmd += "\r\n"
+                    self.sendToTarget(bootcmd)
                     self.expectFromTarget("Finished receiving","Netbooting",timeout=timeout,overrideShutdown=True)
 
             self.expectFromTarget(endsWith,"Booting",timeout=timeout,overrideShutdown=True)
