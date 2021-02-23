@@ -147,7 +147,7 @@ class vcu118Target (fpgaTarget, commonTarget):
                     else:
                         self.terminateAndExit(f"{self.targetIdInfo}Network is not up on target.",exitCode=EXIT.Network) 
         elif (self.osImage=='FreeBSD'):
-            self.runCommand(f"ifconfig xae0 ethet {self.macTarget}")
+            self.runCommand(f"ifconfig xae0 ether {self.macTarget}")
             self.runCommand(f"route add default {self.ipHost}")
             outCmd = self.runCommand (f"ifconfig xae0 inet {self.ipTarget}/24",timeout=60)
         else:
