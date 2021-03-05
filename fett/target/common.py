@@ -67,7 +67,7 @@ class commonTarget():
         self.sshLimitRetries = 3
         self.sshECDSAkeyWasUpdated = False
 
-        self.onlySsh = ((self.osImage=='FreeBSD') and (self.target=='vcu118') and (self.binarySource=='GFE'))
+        self.onlySsh = ((self.osImage=='FreeBSD') and (self.target=='vcu118') and ((self.binarySource=='GFE') or (self.binarySource=='SRI-Cambridge')))
 
         self.osHasBooted = False
         self.isCurrentUserRoot = True #This will be the indicator of which user we are logged in as.
@@ -334,7 +334,7 @@ class commonTarget():
                 self.stopShowingTime.set()
                 time.sleep (0.3) #to make it beautiful
             # set the temporary prompt
-            if ((self.binarySource=="SRI-Cambridge") 
+            if ((self.binarySource=="SRI-Cambridge" and not self.target=='vcu118')
                     or ((self.binarySource=="GFE") and (self.target=='awsf1') and (self.pvAWS=="connectal"))):
                 tempPrompt = "~ #"
             else:
