@@ -59,10 +59,16 @@ class vcu118Target (fpgaTarget, commonTarget):
                 self.terminateAndExit (f"boot: ELF loader <{self.elfLoader}> not implemented.",overrideShutdown=True,exitCode=EXIT.Dev_Bug)
 
             if (self.elfLoader=='netboot'):
-                self.expectFromTarget('>',"Starting netboot loader",timeout=60,overrideShutdown=True)
+                self.expectFromTarget('>',"Starting netboot loader",timeout=120,overrideShutdown=True)
                 dirname, basename = os.path.split(os.path.abspath(self.osImageElf))
                 listenPort = self.findPort(portUse='netboot')
                 printAndLog(f"{self.targetIdInfo}boot: netboot port is <{listenPort}>.")
+                try:
+                    binSize = os.path.getsize(self.osImageElf)/(1024*1024)
+                except Exception as exc:
+                    self.terminateAndExit (f"boot: Failed to compute <{self.osImageElf}> size.",exc=exc,exitCode=EXIT.Run)
+                netbootTimeout = int(binSize * getSetting("vcu118NetbootTransferPace"))
+                printAndLog(f"{self.targetIdInfo}: Netboot timeout is set to <{netbootTimeout} seconds>.",doPrint=False)
                 try:
                     #Need to divert the tftpy logging. Otherwise, in case of debug (`-d`), our logging will get smothered.
                     logging.getLogger('tftpy').propagate = False
@@ -82,7 +88,7 @@ class vcu118Target (fpgaTarget, commonTarget):
                         bootcmd += f" {os.path.basename(getSetting('osImageExtraElf',self.targetId))}"
                     bootcmd += "\r\n"
                     self.sendToTarget(bootcmd)
-                    self.expectFromTarget("Finished receiving","Netbooting",timeout=timeout,overrideShutdown=True)
+                    self.expectFromTarget("Finished receiving","Netbooting",timeout=netbootTimeout,overrideShutdown=True)
 
             self.expectFromTarget(endsWith,"Booting",timeout=timeout,overrideShutdown=True)
 
@@ -462,7 +468,7 @@ class vcu118Target (fpgaTarget, commonTarget):
     @decorate.debugWrap
     @decorate.timeWrap
     def buildSmokeElfForUartSearch(self,hwId):
-        freeRTOSBuildChecks(targetId=self.targetId)
+        freeRTOSBuildChecks(targetId=self.targetId,freertosFork="classic")
         if (not doesSettingExist('buildDir',targetId=self.targetId)): #In case of busybox for instance
             buildDir = os.path.join(getSetting('workDir'), f'build{self.targetSuffix}')
             mkdir(buildDir)
@@ -561,7 +567,7 @@ def programVcu118(mode, attempts=_MAX_PROG_ATTEMPTS-1, targetId=None):
         try:
             bitstreamSize = os.path.getsize(getSetting('bitAndProbefiles',targetId=targetId)[0])/(1024*1024)
             datafileSize = os.path.getsize(extraFile)/(1024*1024)
-            timeout = int(1.15*(250*sqrt(bitstreamSize) + 200*sqrt(datafileSize) - 850))
+            timeout = int(1.725*(250*sqrt(bitstreamSize) + 200*sqrt(datafileSize) - 850))
             logging.debug(f"{targetInfo}programVcu118: Will use flash timeout of <{timeout}>.")
         except Exception as exc:
             timeout = 2400 #fallout value
@@ -715,7 +721,7 @@ def prepareOsBinaryForFlash(targetId=None):
         mkdir(buildDir)
         setSetting('buildDir',buildDir,targetId=targetId)
     buildDir = os.path.join(getSetting('buildDir',targetId=targetId),'vcu118FlashBuild')
-    mkdir(buildDir)
+    mkdir(buildDir,exitIfExists=False)
 
     #Copy the necessary files
     copyDir(os.path.join(getSetting('repoDir'),'fett','target','utils','vcu118FlashBuild'),buildDir,copyContents=True)

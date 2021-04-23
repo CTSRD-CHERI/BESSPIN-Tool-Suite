@@ -76,6 +76,7 @@ class fpgaTarget(object):
             getSetting('openocdLock').acquire()
             openocdExtraCmds = (f"set _CHIPNAME riscv{self.targetSuffix}; gdb_port {self.gdbPort}; "
                 f"telnet_port {self.openocdPort}{self.getOpenocdCustomCfg(isReload=isReload)}")
+            printAndLog(f"{self.targetIdInfo} openocdExtraCmds = {openocdExtraCmds}",doPrint=False)
             try:
                 self.openocdProcess = pexpect.spawn(
                     f"openocd --command '{openocdExtraCmds}' -f {openocdCfg}",
@@ -93,7 +94,7 @@ class fpgaTarget(object):
 
         self.gdbProgStart(elfPath,elfLoadTimeout) #releasing the openocd lock happens here
         
-        if ((self.processor=='bluespec_p3') and (self.target=='vcu118')):
+        if ((self.processor=='bluespec_p3') and (self.target=='vcu118') and (self.elfLoader=='JTAG')):
             _,wasTimeout,_ = self.expectFromTarget("bbl loader", f"attempt to boot {self.processor}",
                 exitOnError=False, timeout=15, issueInterrupt=False,
                 suppressWarnings=True, sshRetry=False)
@@ -103,6 +104,7 @@ class fpgaTarget(object):
                     time.sleep(1) #wait for the function to print "Completed" on the screen
                     printAndLog(f"{self.targetIdInfo}Failed to boot {self.processor}. "
                         f"Trying again ({self.bluespec_p3BootAttemptsIdx+2}/{self.bluespec_p3BootAttemptsMax})...")
+                    self.bluespec_p3BootAttemptsIdx += 1
                     self.fpgaTearDown(isReload=True,stage=failStage.uart)
                     self.stopShowingTime = common.showElapsedTime (getSetting('trash'),estimatedTime=self.sumTimeout)
                     return self.fpgaStart(elfPath, elfLoadTimeout=elfLoadTimeout)

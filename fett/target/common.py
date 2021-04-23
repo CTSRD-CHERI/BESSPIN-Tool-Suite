@@ -513,10 +513,7 @@ class commonTarget():
     def createUser (self):
         printAndLog (f"{self.targetIdInfo}Creating a user...",doPrint=(not self.targetId))
         if (self.osImage=='debian'):
-            self.runCommand (f"useradd -m {self.userName}")
-            self.runCommand (f"passwd {self.userName}",endsWith="New password:")
-            self.runCommand (self.userPassword,endsWith="Retype new password:")
-            self.runCommand (self.userPassword,expectedContents='password updated successfully')
+            self.runCommand (f"useradd -m {self.userName} && echo \"{self.userName}:{self.userPassword}\" | chpasswd")
             self.runCommand (f"usermod --shell /bin/bash {self.userName}")
             self.runCommand(f"echo \"PS1=\'\${{debian_chroot:+(\$debian_chroot)}}\\u@\\h:\\w\$ \'\" >> /home/{self.userName}/.bashrc")
         elif (self.osImage=='FreeBSD'):
@@ -572,14 +569,20 @@ class commonTarget():
 
 
     @decorate.debugWrap
-    def getDefaultEndWith (self):
+    def getDefaultEndWith (self,userName=None):
+        if (not self.userCreated):
+            isRoot = True
+        elif (userName is None):
+            isRoot = self.isCurrentUserRoot
+        else:
+            isRoot = (userName != self.userName)
         if (self.osImage=='debian'):
-            if (self.isCurrentUserRoot):
+            if (isRoot):
                 return ":~#"
             else:
                 return ":~\$"
         elif (self.osImage=='FreeBSD'):
-            if (self.isCurrentUserRoot):
+            if (isRoot):
                 if (self.target=='awsf1'):
                     return ":~ #"
                 else:
@@ -587,7 +590,7 @@ class commonTarget():
             else:
                 return ":~ \$"
         elif (self.osImage=='busybox'):
-            if (self.isCurrentUserRoot):
+            if (isRoot):
                 return "~ #"
             else:
                 return "\$"
@@ -818,7 +821,7 @@ class commonTarget():
             sendFromHost.daemon = True
             getSetting('trash').throwThread(sendFromHost,f"nc sending <{pathToFile}/{xFile}> from host")
             listenOnTarget.start()
-            time.sleep(1)
+            time.sleep(5)
             sendFromHost.start()
             listenOnTarget.join(timeout=timeout+5) #arbitrarily set timeout
             #check sending
@@ -872,6 +875,8 @@ class commonTarget():
         printAndLog ("runApp: Starting the application stack...")
         if (sendFiles):
             #send any needed files to target
+            if (self.procLevel=='p3'):
+                timeout *= 4
             self.sendTar(timeout=timeout)
 
         # assign modules
@@ -1244,13 +1249,15 @@ class commonTarget():
     @decorate.debugWrap
     @decorate.timeWrap
     def openSshConn (self,userName='root',endsWith=None,timeout=60,specialTest=False):
-        def returnFail (message,exc=None):
+        def returnFail (message,exc=None,returnSpecial=False):
             self.killSshConn()
+            if (returnSpecial):
+                return 'BLOCKED_IP'
             warnAndLog (message,doPrint=False,exc=exc)
             extraMsg = ' Trying again...' if (self.sshRetries < self.sshLimitRetries-1) else ''
-            warnAndLog(f"openSshConn: Failed to open an SSH connection for <{userName}>.{extraMsg}")
+            warnAndLog(f"openSshConn: Failed to open an SSH connection for <{userName}>.{extraMsg}",doPrint=(not specialTest))
             self.sshRetries += 1
-            return self.openSshConn (userName=userName, timeout=timeout)
+            return self.openSshConn (userName=userName, endsWith=endsWith, timeout=timeout, specialTest=specialTest)
 
         if (self.osImage not in ['FreeBSD','debian']):
             self.terminateAndExit(f"<openSshConn> is not implemented for <{self.osImage}>.",exitCode=EXIT.Dev_Bug)
@@ -1275,8 +1282,7 @@ class commonTarget():
         except Exception as exc:
             return returnFail(f"openSshConn: Failed to spawn an Ssh connection.",exc=exc)
 
-        if (not self.onlySsh):
-            self.genStdinEntropy(endsWith=self.getAllEndsWith())
+        self.genStdinEntropy(endsWith=self.getAllEndsWith())
 
         self.isSshConn = True
         self.process = self.sshProcess
@@ -1290,15 +1296,10 @@ class commonTarget():
             retYes = self.runCommand("yes",endsWith=passwordPrompt+blockedIpResponse+[pexpect.EOF],
                         timeout=timeout,exitOnError=False,issueInterrupt=False)
             if (retYes[3] not in [0,1]): #No password prompt
-                if (specialTest and (retYes[3] in [2,3,4,5])):
-                    return 'BLOCKED_IP'
-                else:
-                    return returnFail(f"openSshConn: Unexpected outcome when responding <yes> to the ssh process.")
+                return returnFail(f"openSshConn: Unexpected outcome when responding <yes> to the ssh process.",
+                    returnSpecial=(specialTest and (retYes[3] in [2,3,4,5])))
         elif (retExpect[2] in [2,3,4,6]): #the ip was blocked or connection refused
-            if specialTest:
-                return 'BLOCKED_IP'
-            else:
-                return returnFail(f"openSshConn: Unexpected response when spawning the ssh process.")
+            return returnFail(f"openSshConn: Unexpected response when spawning the ssh process.",returnSpecial=specialTest)
         retPassword = self.runCommand(sshPassword,endsWith=endsWith,timeout=timeout,
                         exitOnError=False,issueInterrupt=False)
         if (not retPassword[0]):
@@ -1322,7 +1323,8 @@ class commonTarget():
         if (self.osImage not in ['FreeBSD','debian']):
             self.terminateAndExit(f"<closeSshConn> is not implemented for <{self.osImage}>.",exitCode=EXIT.Dev_Bug)
         if (self.isSshConn and (self.sshProcess is not None)):
-            self.runCommand("exit",endsWith=pexpect.EOF,suppressErrors=True,timeout=timeout,exitOnError=False)
+            self.runCommand("exit", endsWith=pexpect.EOF, timeout=timeout,
+                suppressErrors=True, exitOnError=False, issueInterrupt=False)
         try:
             self.fSshOut.close()
         except Exception as exc:
@@ -1359,7 +1361,7 @@ class commonTarget():
 
     @decorate.debugWrap
     def genStdinEntropy (self,endsWith=None):
-        if not self.hasHardwareRNG():
+        if ((not self.hasHardwareRNG()) and (not self.onlySsh)):
             lenText = 240 # Please do not use a larger string. there might be a UART buffer issue on firesim, should be resolved soon
             alphabet = string.ascii_letters + string.digits + ' '
             randText = ''.join(random.choice(alphabet) for i in range(lenText))
