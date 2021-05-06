@@ -9,4 +9,4 @@
 	url = git@github.com:DARPA-SSITH-Demonstrators/SSITH-FETT-Binaries.git
 [submodule "FreeRTOS"]
 	path = FreeRTOS
-	url = git@github.com:GaloisInc/FreeRTOS.git
+	url = git@github.com:GaloisInc/BESSPIN-FreeRTOS.git
