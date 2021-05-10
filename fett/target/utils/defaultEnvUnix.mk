@@ -15,7 +15,7 @@ ifeq ($(TARGET),AWSF1)
 endif
 endif
 
-CFLAGS := $(ARCH_ABI) -Wall -O0 $(FETT_DEFS)
+CFLAGS := $(ARCH_ABI) -Wall -g -O0 $(FETT_DEFS)
 
 ifeq ($(BIN_SOURCE),SRI_Cambridge)
 	PREFIX_FreeBSD := riscv64-unknown-freebsd13.0
