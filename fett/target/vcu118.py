@@ -22,6 +22,7 @@ class vcu118Target (fpgaTarget, commonTarget):
         fpgaTarget.__init__(self, targetId=targetId)
 
         self.osImageElf = getSetting('osImageElf',targetId=self.targetId)
+        self.osImageExtraElf = getSetting('osImageExtraElf',targetId=self.targetId)
 
         self.ipHost = getSetting('vcu118IpHost')
         self.ipTarget = getTargetIp(targetId=targetId)
@@ -65,9 +66,11 @@ class vcu118Target (fpgaTarget, commonTarget):
                 printAndLog(f"{self.targetIdInfo}boot: netboot port is <{listenPort}>.")
                 try:
                     binSize = os.path.getsize(self.osImageElf)/(1024*1024)
+                    if self.osImageExtraElf != None:
+                        binSize += os.path.getsize(self.osImageExtraElf)/(1024*1024)
                 except Exception as exc:
                     self.terminateAndExit (f"boot: Failed to compute <{self.osImageElf}> size.",exc=exc,exitCode=EXIT.Run)
-                netbootTimeout = int(binSize * getSetting("vcu118NetbootTransferPace"))
+                netbootTimeout = int(binSize * getSetting("vcu118NetbootTransferPace")) + 15
                 printAndLog(f"{self.targetIdInfo}: Netboot timeout is set to <{netbootTimeout} seconds>.",doPrint=False)
                 try:
                     #Need to divert the tftpy logging. Otherwise, in case of debug (`-d`), our logging will get smothered.
