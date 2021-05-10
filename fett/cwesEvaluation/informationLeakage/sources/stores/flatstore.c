@@ -37,11 +37,10 @@ ADDR_SADDR(int16_t addr)
     return p + o;
 }
 
-
 #define LMEM(_dom, _addr)                          \
-    (((_dom) >= 0) ?                              \
-     &store[((_dom)*STORE_SIZE*OBJ_SIZE) + ADDR_SADDR(_addr)] \
-     : (((_dom) == -1) ? &system_store[ADDR_SADDR(_addr)] : &public_store[ADDR_SADDR(_addr)]))
+    CHERI_SETBOUNDS(((_dom) >= 0) ?                              \
+     (store + ((_dom)*STORE_SIZE*OBJ_SIZE) + ADDR_SADDR(_addr)) \
+     : (((_dom) == -1) ? (system_store + ADDR_SADDR(_addr)) : (public_store + ADDR_SADDR(_addr))), OBJ_SIZE)
 #define MEM(_dom, _addr) \
     (((_dom) >= 0) ?                                                    \
      store[((_dom)*STORE_SIZE*OBJ_SIZE) + ADDR_SADDR(_addr)]           \

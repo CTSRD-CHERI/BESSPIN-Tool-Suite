@@ -80,7 +80,7 @@ static char *neg_table[2];
     (OBJ_ADDR(_addr)*OBJ_SIZE + OBJ_OFF(_addr))
 
 #define LMEM(_dom, _addr) \
-    ((_dom < 0) ? &neg_table[_dom + 2][ADDR_SADDR(_addr)] : &store_table[_dom][ADDR_SADDR(_addr)])
+    CHERI_SETBOUNDS(((_dom < 0) ? neg_table[_dom + 2] + ADDR_SADDR(_addr) : store_table[_dom] + ADDR_SADDR(_addr)), OBJ_SIZE)
 #define MEM(_dom, _addr) \
     ((_dom < 0) ? neg_table[_dom + 2][ADDR_SADDR(_addr)] : store_table[_dom][ADDR_SADDR(_addr)])
 

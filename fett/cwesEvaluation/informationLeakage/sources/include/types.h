@@ -97,4 +97,11 @@ struct smessage {
 #define DEBUG_PRINTF(...)
 #endif
 
+#ifdef __CHERI_PURE_CAPABILITY__
+#define	CHERI_SETBOUNDS(cap, size)	\
+    __builtin_cheri_bounds_set((cap), (size))
+#else
+#define	CHERI_SETBOUNDS(cap, size)	(cap)
+#endif
+
 #endif
