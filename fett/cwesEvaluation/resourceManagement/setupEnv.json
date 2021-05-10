@@ -283,7 +283,7 @@
                             "any" : ["<END-OF-MAIN>", "Aborted", "Segmentation fault"]
                         },
                         "FreeBSD" : {
-                            "any" : ["<END-OF-MAIN>"]
+                            "any" : ["<END-OF-MAIN>", "<TIMEOUT>"]
                         },
                         "FreeRTOS" : {
                             "qemu" : ["<END-OF-MAIN>"],
