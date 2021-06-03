@@ -1,7 +1,8 @@
 # This file has the necessary includes to cross-compile files for Unix
 
 ifeq ($(BIN_SOURCE),SRI_Cambridge)
-	ARCH_ABI := -march=rv64imafdcxcheri -mabi=l64pc128d
+	# pure-cap ABI with stack zeroing on entry and sub-object bounds
+	ARCH_ABI := -march=rv64imafdcxcheri -mabi=l64pc128d -Xclang -cheri-bounds=aggressive -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
 else
 	ARCH_ABI := -march=rv64imafdc -mabi=lp64d
 endif
