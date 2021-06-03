@@ -49,7 +49,7 @@
         "JTAG": {
           "name" : "procLevel",
           "p2" : { "timeout" : { "elfLoad" : 1800, "boot" : 550 } },
-          "p3" : { "timeout" : { "elfLoad" : 1800, "boot" : 900 } }
+          "p3" : { "timeout" : { "elfLoad" : 1800, "boot" : 1200 } }
         },
         "else": { "timeout" : { "boot" : 900 } }
       },
@@ -81,6 +81,6 @@
   "FreeRTOS": { 
     "name": "cross-compiler",
     "GCC": { "timeout" : { "elfLoad" : 60, "boot" : 30 } },
-    "Clang": { "timeout" : { "elfLoad" : 120, "boot" : 30 } }
+    "Clang": { "timeout" : { "elfLoad" : 240, "boot" : 30 } }
   }
 }
