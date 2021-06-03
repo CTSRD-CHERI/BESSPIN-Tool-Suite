@@ -1126,7 +1126,12 @@ class commonTarget():
         self.checkFallToTty ("sendToTarget", process=process)
         logging.debug(f"{self.targetIdInfo}sendToTarget: sending <{command}>")
         try:
-            process.sendline(command)
+	    # We can't just send at 115.2kbps to a 25Mhz CPU like toooba.
+	    # Sleep between each character to pace our sending.
+            for char in list(command):
+                process.send(char)
+                time.sleep(0.01)
+            process.sendline("")
         except Exception as exc:
             if (exitOnError):
                 self.terminateAndExit(f"{self.targetIdInfo}sendToTarget: Failed to send <{command}> to {self.target}.",exc=exc,exitCode=EXIT.Run)
