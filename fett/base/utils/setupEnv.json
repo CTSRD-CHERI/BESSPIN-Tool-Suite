@@ -60,12 +60,12 @@
         {
             "name" : "vcu118EthAdaptorName",
             "type" : "string",
-            "val" : "eth0fpga"
+            "val" : "eth0"
         },
         {
             "name" : "vcu118EthAdaptorMacAddress",
             "type" : "macAddress",
-            "val" : "88:53:48:41:56:45"
+            "val" : "ac:1f:6b:72:c6:03"
         },
         {
             "name" : "awsf1IpTarget",
