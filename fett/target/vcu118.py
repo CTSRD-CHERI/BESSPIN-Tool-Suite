@@ -49,7 +49,7 @@ class vcu118Target (fpgaTarget, commonTarget):
         if (self.osImage in ['debian', 'FreeBSD', 'busybox']):
             if (self.elfLoader=='JTAG'):
                 elfLoadTimeout = self.parseBootTimeoutDict(timeoutDict,key="elfLoad")
-                self.fpgaStart(self.osImageElf,elfLoadTimeout=elfLoadTimeout)
+                self.fpgaStart(self.osImageElf,extraElfPath=self.osImageExtraElf,elfLoadTimeout=elfLoadTimeout)
             elif (self.elfLoader=='netboot'):
                 success, netbootTimeoutDict, message = self.get_timeout_from_settings_dict("FreeRTOS")
                 if not success:
@@ -92,6 +92,8 @@ class vcu118Target (fpgaTarget, commonTarget):
                     bootcmd += "\r\n"
                     self.sendToTarget(bootcmd)
                     self.expectFromTarget("Finished receiving","Netbooting",timeout=netbootTimeout,overrideShutdown=True)
+                    if self.osImageExtraElf != None:
+                        self.expectFromTarget("Finished receiving","Netbooting",timeout=netbootTimeout,overrideShutdown=True)
 
             self.expectFromTarget(endsWith,"Booting",timeout=timeout,overrideShutdown=True)
 

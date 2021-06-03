@@ -57,7 +57,7 @@ class fpgaTarget(object):
 
     @decorate.debugWrap
     @decorate.timeWrap
-    def fpgaStart (self, elfPath, elfLoadTimeout=15, isReload=False):      
+    def fpgaStart (self, elfPath, extraElfPath=None, elfLoadTimeout=15, isReload=False):
         if (self.target=='vcu118'):
             time.sleep(3) 
             # After programming the fpga, the OS needs a moment to release the resource to be used by openocd.
@@ -87,12 +87,12 @@ class fpgaTarget(object):
                 if ((self.target=='vcu118') and (self.fpgaStartRetriesIdx < self.fpgaStartRetriesMax - 1)):
                     self.fpgaStartRetriesIdx += 1
                     errorAndLog (f"{self.targetIdInfo}fpgaStart: Failed to spawn the openocd process. Trying again ({self.fpgaStartRetriesIdx+1}/{self.fpgaStartRetriesMax})...",exc=exc)
-                    return self.fpgaReload (elfPath, elfLoadTimeout=elfLoadTimeout, stage=failStage.openocd)
+                    return self.fpgaReload (elfPath, extraElfPath=extraElfPath, elfLoadTimeout=elfLoadTimeout, stage=failStage.openocd)
                 self.terminateAndExit(f"{self.targetIdInfo}fpgaStart: Failed to spawn the openocd process.",overrideShutdown=True,exc=exc,exitCode=EXIT.Run)
 
         self.setupUart()
 
-        self.gdbProgStart(elfPath,elfLoadTimeout) #releasing the openocd lock happens here
+        self.gdbProgStart(elfPath,elfLoadTimeout,extraElfPath=extraElfPath) #releasing the openocd lock happens here
         
         if ((self.processor=='bluespec_p3') and (self.target=='vcu118') and (self.elfLoader=='JTAG')):
             _,wasTimeout,_ = self.expectFromTarget("bbl loader", f"attempt to boot {self.processor}",
@@ -107,7 +107,7 @@ class fpgaTarget(object):
                     self.bluespec_p3BootAttemptsIdx += 1
                     self.fpgaTearDown(isReload=True,stage=failStage.uart)
                     self.stopShowingTime = common.showElapsedTime (getSetting('trash'),estimatedTime=self.sumTimeout)
-                    return self.fpgaStart(elfPath, elfLoadTimeout=elfLoadTimeout)
+                    return self.fpgaStart(elfPath,extraElfPath=extraElfPath,elfLoadTimeout=elfLoadTimeout)
                 else:
                     self.terminateAndExit(f"{self.targetIdInfo}Failed to boot {self.processor}.",overrideShutdown=True,
                         overrideConsole=True,exitCode=EXIT.Run)
@@ -116,7 +116,7 @@ class fpgaTarget(object):
 
     @decorate.debugWrap
     @decorate.timeWrap
-    def gdbProgStart(self,elfPath,elfLoadTimeout,mainProg=True):
+    def gdbProgStart(self,elfPath,elfLoadTimeout,extraElfPath=None,mainProg=True):
         # start the gdb process
         self.fGdbOut = ftOpenFile(os.path.join(getSetting('workDir'), f'gdb{self.targetSuffix}.out'), 'wb')
         try:
@@ -130,7 +130,7 @@ class fpgaTarget(object):
             if ((self.target=='vcu118') and (self.fpgaStartRetriesIdx < self.fpgaStartRetriesMax)):
                 self.fpgaStartRetriesIdx += 1
                 errorAndLog (f"{self.targetIdInfo}gdbProgStart: Failed to spawn the gdb process. Trying again ({self.fpgaStartRetriesIdx+1}/{self.fpgaStartRetriesMax})...",exc=exc)
-                return self.fpgaReload (elfPath, elfLoadTimeout=elfLoadTimeout, stage=failStage.gdb)
+                return self.fpgaReload (elfPath, extraElfPath=extraElfPath, elfLoadTimeout=elfLoadTimeout, stage=failStage.gdb)
             self.terminateAndExit(f"{self.targetIdInfo}gdbProgStart: Failed to spawn the gdb process.",overrideShutdown=True,exc=exc,exitCode=EXIT.Run)
 
         # configure gdb
@@ -159,7 +159,7 @@ class fpgaTarget(object):
                 getSetting('openocdLock').release()
 
             if (not self.flashMode): #No need to load when flash
-                self.gdbLoad (elfLoadTimeout=elfLoadTimeout)
+                self.gdbLoad (elfLoadTimeout=elfLoadTimeout,extraElfPath=extraElfPath)
                 if (self.processor=='bluespec_p3'):
                     time.sleep(3) # Bluespec_p3 needs time here before being able to properly continue.
         elif (self.useOpenocd() and mainProg):
@@ -173,7 +173,10 @@ class fpgaTarget(object):
 
     @decorate.debugWrap
     @decorate.timeWrap
-    def gdbLoad (self,elfLoadTimeout=15):
+    def gdbLoad (self,elfLoadTimeout=15,extraElfPath=None):
+        if extraElfPath is not None:
+            printAndLog(f"loading {extraElfPath} timeout {elfLoadTimeout}")
+            self.runCommandGdb(f" load {extraElfPath}",timeout=(elfLoadTimeout * 10),erroneousContents="failed", expectedContents="Transfer rate")
         self.runCommandGdb("load",timeout=elfLoadTimeout,erroneousContents="failed", expectedContents="Transfer rate")
 
     @decorate.debugWrap
@@ -185,12 +188,12 @@ class fpgaTarget(object):
 
     @decorate.debugWrap
     @decorate.timeWrap
-    def fpgaReload (self, elfPath, elfLoadTimeout=15, stage=failStage.unknown):
+    def fpgaReload (self, elfPath, extraElfPath=None, elfLoadTimeout=15, stage=failStage.unknown):
         if (self.target!='vcu118'):
             self.terminateAndExit(f"{self.targetIdInfo}<fpgaReload> is not implemented for target {self.target}.",overrideShutdown=True)
         self.fpgaTearDown(isReload=True,stage=stage)
         vcu118.programBitfile(doPrint=False, targetId=self.targetId)
-        self.fpgaStart(elfPath, elfLoadTimeout=elfLoadTimeout, isReload=True)
+        self.fpgaStart(elfPath, extraElfPath=extraElfPath, elfLoadTimeout=elfLoadTimeout, isReload=True)
         return
 
     @decorate.debugWrap
