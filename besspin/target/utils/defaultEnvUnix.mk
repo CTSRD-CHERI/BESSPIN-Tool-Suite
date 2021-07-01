@@ -11,7 +11,7 @@ ifeq ($(TARGET),$(filter $(TARGET),VCU118 AWSF1))
 	BESSPIN_DEFS += -DBESSPIN_FPGA 
 endif
 
-CFLAGS := $(ARCH_ABI) -Wall -O0 $(BESSPIN_DEFS)
+CFLAGS := $(ARCH_ABI) -Wall -O0 -g $(BESSPIN_DEFS)
 
 ifeq ($(BIN_SOURCE),SRI_Cambridge)
 	PREFIX_FREEBSD := riscv64-unknown-freebsd13.0
