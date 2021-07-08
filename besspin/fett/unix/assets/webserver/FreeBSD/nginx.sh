@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# PROVIDE: nginx
+# PROVIDE: fett_nginx
 # REQUIRE: DAEMON
 # KEYWORD: shutdown
 
