@@ -6,13 +6,13 @@
 
 . /etc/rc.subr
 
-name=nginx
-rcvar=nginx_enable
-command=/usr/local/sbin/nginx
+name=fett_nginx
+rcvar=fett_nginx_enable
+command=/fett/nginx/sbin/nginx
 
 load_rc_config $name
 : ${nginx_enable:=no}
-: ${nginx_prefix=/usr/local/nginx}
+: ${nginx_prefix=/fett/nginx}
 
 command_args="-p ${nginx_prefix}"
 pidfile=${nginx_prefix}/logs/nginx.pid

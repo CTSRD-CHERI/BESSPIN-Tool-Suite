@@ -1,0 +1,20 @@
+
+Welcome to CheriBSD (FETT edition)!
+
+CheriBSD extends FreeBSD to implement memory protection and software
+compartmentalization features supported by the CHERI ISA.
+
+CheriBSD source may be found at https://github.com/CTSRD-CHERI/cheribsd/
+
+Find out more about about CHERI at http://cheri-cpu.org/
+
+Vulnerable FETT target applications are installed under /fett including
+OpenSSH, SQLite, nginx (under /fett/nginx), and the voter registration
+system application.
+
+A CHERI-aware version of gdb is installed.
+
+Your default shell is /bin/sh.  If you desire a more familiar experience
+you can `exec bash -l` or change your default shell with `chsh -s bash`.
+This version is experimental and may contain bugs.
+
