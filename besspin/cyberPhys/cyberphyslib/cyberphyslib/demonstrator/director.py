@@ -16,6 +16,7 @@ import cyberphyslib.demonstrator.infotainment as infotain
 import cyberphyslib.demonstrator.can_out as ccout
 import cyberphyslib.demonstrator.component as ccomp
 import cyberphyslib.demonstrator.config as cconf
+import cyberphyslib.demonstrator.joystick as cjoy
 import cyberphyslib.canlib as canlib
 import can as extcan
 
@@ -84,6 +85,17 @@ class IgnitionDirector:
         {'trigger': 'next_state', 'source': 'cc_msg', 'dest': 'restart'}
     ]
 
+    hacks2patterns = {
+        canlib.HACK_NONE: ledm.LedPatterns.NOMINAL,# TODO?
+        canlib.HACK_OTA: ledm.LedPatterns.NOMINAL,
+        canlib.HACK_BRAKE: ledm.LedPatterns.BRAKE_HACK,
+        canlib.HACK_THROTTLE: ledm.LedPatterns.THROTTLE_HACK,
+        canlib.HACK_TRANSMISSION: ledm.LedPatterns.TRANSMISSION_HACK,
+        canlib.HACK_LKAS: ledm.LedPatterns.STEERING_HACK,
+        canlib.HACK_INFOTAINMENT_1: ledm.LedPatterns.ALL_ON,# TODO
+        canlib.HACK_INFOTAINMENT_2: ledm.LedPatterns.ALL_ON,# TODO
+    }
+
     @classmethod
     def from_network_config(cls, net_conf: cconf.DemonstratorNetworkConfig):
         """produce director from the Besspin environment setup file"""
@@ -123,7 +135,9 @@ class IgnitionDirector:
 
         # NOTE: there are inconsistencies between TcpBus and UdpBus arguments
         self.scenario_timeout = cconf.SCENARIO_TIMEOUT
-        self.cc_timeout = 20 # 20 seconds
+        self.cc_timeout = cconf.CC_TIMEOUT # 20 seconds
+
+        self.joystick_name = cconf.JOYSTICK_NAME
 
         self._handler = ComponentHandler()
         self.machine = Machine(self, states=self.states, transitions=self.transitions, initial='startup', show_conditions=True)
@@ -149,7 +163,6 @@ class IgnitionDirector:
         # C&C message bus
         nodes = [admin_addr, director_addr]
         self.cc_recvr = canlib.TcpBus(director_addr, nodes)
-        self.cc_timeout = 30.0
 
         # input space as class members
         self.input_noncrit_fail = False
@@ -246,7 +259,7 @@ class IgnitionDirector:
         player = infotain.InfotainmentPlayer(self.info_net)
         if not start_component(ui): return
         if not start_component(player): return
-        self.info_net.register(ui)
+        self.can_multiverse.register(ui)
         self.can_multiverse.register(player)
 
         # TODO: FIXME: componentize this?
@@ -257,6 +270,12 @@ class IgnitionDirector:
 
         # startup the speedometer
         start_noncrit_component(speedo.Speedo())
+
+        # startup the pedal monitor
+        start_noncrit_component(cjoy.PedalMonitorComponent())
+
+        # startup the joystick monitor
+        start_noncrit_component(cjoy.JoystickMonitorComponent(self.joystick_name))
 
         # check if noncritical error occurred
         if self.input_noncrit_fail:
@@ -294,12 +313,16 @@ class IgnitionDirector:
                 else:
                     # TODO: FIXME: write test for this
                     lm: ledm.LedManagerComponent = self._handler["ledm"]
-                    # NOTE: is this the agreed on decoding mechanism?
-                    lm.update_pattern(ledm.LedPatterns(hack_idx))
+                    lm.update_pattern(ledm.LedPatterns(IgnitionDirector.hacks2patterns[hack_idx]))
 
             elif id == canlib.CAN_ID_CMD_ACTIVE_SCENARIO:
                 # NOTE: this is not agreed on
-                nmap = {0: "base", 1: "secure_ecu", 2: "secure_infotainment"}
+                # FIXME: should different light color be associated with SSITH scenario?
+                # white/blue vs. the baseline green?
+                nmap = {
+                    canlib.SCENARIO_BASELINE: "base",
+                    canlib.SCENARIO_SECURE_ECU: "secure_ecu",
+                    canlib.SCENARIO_SECURE_INFOTAINMENT: "secure_infotainment"}
                 scen_idx = struct.unpack("!B", msg.data)[0]
                 ignition_logger.debug(f"process cc: active scenario {scen_idx}")
                 cm: ccan.CanMultiverseComponent = self._handler["canm"]
@@ -331,12 +354,21 @@ class IgnitionDirector:
                 self.process_cc(cc_recv)
                 return
             else: # CC timeout condition
-                if self.self_drive_mode: # do nothing if already in self drive mode
+                # NOTE: if jmonitor has failed assume user input is present
+                activity = self._handler['jmonitor'].is_active or self._handler['pmonitor'].is_active
+
+                # if in self drive mode and activity has occurred, get out
+                if activity and self.self_drive_mode:
+                    self.default_input()
+                    self.input_self_drive = False
+                    return
+                elif self.self_drive_mode or activity: # do nothing if self drive mode or user activity
                     pass
                 else:
                     self.default_input()
                     self.input_self_drive = True
                     return
+
         self.default_input()
         self.input_s_timeout = True
 
