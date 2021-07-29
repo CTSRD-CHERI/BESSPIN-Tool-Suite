@@ -100,6 +100,9 @@ static void usePostRelease (int i, int isSource) {
         return;
     }
     FREE(pMain);
+#ifdef __CHERI_PURE_CAPABILITY__
+    malloc_revoke();
+#endif
     xSizeToMallocExtra = (size_t) ((rand() % (MALLOC_SIZE_MAX-MALLOC_SIZE_MIN+1)) + MALLOC_SIZE_MIN);
     pExtra1 = (char *) MALLOC(xSizeToMallocExtra * sizeof(char)); 
     pExtra2 = (char *) MALLOC(xSizeToMallocExtra * sizeof(char)); 
