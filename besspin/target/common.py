@@ -334,7 +334,7 @@ class commonTarget():
                 self.stopShowingTime.set()
                 time.sleep (0.3) #to make it beautiful
             # set the temporary prompt
-            if ((self.binarySource=="SRI-Cambridge" and not self.target=='vcu118')
+            if ((self.binarySource=="SRI-Cambridge")
                     or ((self.binarySource=="GFE") and (self.target=='awsf1') and (self.pvAWS=="connectal"))):
                 tempPrompt = "~ #"
             else:
@@ -1126,8 +1126,8 @@ class commonTarget():
         self.checkFallToTty ("sendToTarget", process=process)
         logging.debug(f"{self.targetIdInfo}sendToTarget: sending <{command}>")
         try:
-	    # We can't just send at 115.2kbps to a 25Mhz CPU like toooba.
-	    # Sleep between each character to pace our sending.
+            # We can't just send at 115.2kbps to a 25Mhz CPU like toooba.
+            # Sleep between each character to pace our sending.
             for char in list(command):
                 process.send(char)
                 time.sleep(0.01)
@@ -1275,7 +1275,7 @@ class commonTarget():
             self.enableSshOnRoot()
 
         portPart = '' if (not self.sshHostPort) else f" -p {self.sshHostPort}"
-        sshCommand = f"env -u SSH_AUTH_SOCK ssh{portPart} {userName}@{self.ipTarget}"
+        sshCommand = f"env -u SSH_AUTH_SOCK ssh{portPart} -o PreferredAuthentications=password {userName}@{self.ipTarget}"
         sshPassword = self.rootPassword  if (userName=='root') else self.userPassword
         #Need to clear the ECDSA key first in case it is not the first time
         if (not self.sshECDSAkeyWasUpdated):
@@ -1294,22 +1294,25 @@ class commonTarget():
         self.process = self.sshProcess
         passwordPrompt = [f"Password for {userName}@[\w\-\.]+\:", f"{userName}@[\w\-\.]+\'s password\:"]
         blockedIpResponse = ["Connection closed by remote host", "Connection reset by peer", "Permission denied (publickey,keyboard-interactive)."]
-        retExpect = self.expectFromTarget(passwordPrompt + blockedIpResponse + ['\)\?',pexpect.EOF],"openSshConn",
+        loggedInPrompt = ["root@cheribsd-besspin-riscv64-purecap:~ #"]
+        retExpect = self.expectFromTarget(passwordPrompt + blockedIpResponse + loggedInPrompt + ['\)\?',pexpect.EOF],"openSshConn",
                         timeout=timeout,exitOnError=False,issueInterrupt=False)
         if (retExpect[1]): #Failed
             return returnFail(f"openSshConn: Spawning the ssh process timed out.")
-        elif (retExpect[2]==5): # asking for yes/no for new host
-            retYes = self.runCommand("yes",endsWith=passwordPrompt+blockedIpResponse+[pexpect.EOF],
+        elif (retExpect[2]==6): # asking for yes/no for new host
+            retYes = self.runCommand("yes",endsWith=passwordPrompt+blockedIpResponse+loggedInPrompt+[pexpect.EOF],
                         timeout=timeout,exitOnError=False,issueInterrupt=False)
-            if (retYes[3] not in [0,1]): #No password prompt
+            if (retYes[3] not in [0,1,5]): #No password prompt
                 return returnFail(f"openSshConn: Unexpected outcome when responding <yes> to the ssh process.",
                     returnSpecial=(specialTest and (retYes[3] in [2,3,4,5])))
-        elif (retExpect[2] in [2,3,4,6]): #the ip was blocked or connection refused
+        elif (retExpect[2] in [2,3,4,7]): #the ip was blocked or connection refused
             return returnFail(f"openSshConn: Unexpected response when spawning the ssh process.",returnSpecial=specialTest)
-        retPassword = self.runCommand(sshPassword,endsWith=endsWith,timeout=timeout,
-                        exitOnError=False,issueInterrupt=False)
-        if (not retPassword[0]):
-            return returnFail(f"openSshConn: Failed to login to the SSH connection.")
+        # We've either got a password prompt or logged in without a password
+        if (retExpect[2] != 5):
+            retPassword = self.runCommand(sshPassword,endsWith=endsWith,timeout=timeout,
+                            exitOnError=False,issueInterrupt=False)
+            if (not retPassword[0]):
+                return returnFail(f"openSshConn: Failed to login to the SSH connection.")
         self.sshRetries = 0 #reset the retries
         return True
 
