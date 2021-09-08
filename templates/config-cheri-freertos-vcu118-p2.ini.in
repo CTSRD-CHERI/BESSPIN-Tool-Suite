@@ -1,8 +1,6 @@
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# CHERI Qemu CWE test config
+# CHERI-FreeRTOS VCU118 P2 CWE test config
 #
-# Update all the instances of /home/bed22/cheri to your cheribuild path.
-# Update /home/bed22/ssith/BESSPIN-Tool-Suite to your repo path.
 # You'll need to have built cheribsd-riscv64-purecap and qemu.
 #
 # Full documentation explaining all settings can be found (or pointed to) in ./docs/base/configuration.md.
@@ -45,18 +43,18 @@ pathToCustomCyberPhysConfig = /path/to/config
 [target]
 binarySource = SRI-Cambridge
 # [ GFE | LMCO | Michigan | MIT | SRI-Cambridge ]
-sourceVariant = temporal
+sourceVariant = default
 # [ default | purecap | temporal | combo-100 | combo-015-017-100-101-103 ] 
 # purecap and temporal are only compatible with SRI-Cambridge.
 # combo-100 and combo-015-017-100-101-103 are only compatible with LMCO on vcu118
-target = qemu
+target = vcu118
 # [ qemu | vcu118 | awsf1 ]
 vcu118Mode = nonPersistent
 # [ nonPersistent | flashProgramAndBoot | flashBoot ]. Only applicable if target is set to "vcu118".
 # You need to have physical (non-remote) access to the vcu118 board if you choose the flash options.
-processor = bluespec_p2
-# [bluespec_p1, chisel_p1, bluespec_p2, chisel_p2, bluespec_p3, chisel_p3]
-osImage = FreeBSD
+processor = cheri_p2
+# [bluespec_p1, cheri_p1, chisel_p1, bluespec_p2, cheri_p2, chisel_p2, bluespec_p3, cheri_p3, chisel_p3]
+osImage = FreeRTOS
 # [ debian | FreeRTOS | FreeBSD | busybox(limited) ]
 elfLoader = netboot
 # [ JTAG | netboot ]
@@ -64,13 +62,13 @@ useCustomOsImage = No
 # Source of the OS image: If 'No', Nix/BESSPIN-LFS will be used.
 pathToCustomOsImage = /path/to/image
 # Path to the osImage in case 'useCustomOsImage' is set to Yes.
-useCustomProcessor = No
+useCustomProcessor = Yes
 # Source of the processor files: If 'No', Nix/BESSPIN-LFS will be used.
-pathToCustomProcessorSource = /path/to/source/directory
+pathToCustomProcessorSource = %%BESSPIN_TOOL_SUITE_DIR%%/ecats-phase3-evaluation/bitstreams
 # Path to a directory with all the files needed (following the structure of BESSPIN-LFS) to use the custom processor in case 'useCustomProcessor' is set to Yes.
-useCustomQemu = Yes
+useCustomQemu = No
 # Source of Qemu binary:  If 'No', Nix qemu-system-riscv64 will be used.
-pathToCustomQemu = /home/bed22/cheri/output/sdk/bin/qemu-system-riscv64cheri
+pathToCustomQemu = /path/to/qemu
 # Path to an appropriate qemu binary to use when useCustomQemu is yes.
 useCustomHwTarget = No
 # In a many-board system, use the HW Target specified by "customHWTarget".
@@ -128,15 +126,14 @@ linker = LLD
 
 #--------------------------------------------------------------------------------
 [evaluateSecurityTests]
-#vulClasses = [bufferErrors, PPAC, resourceManagement, informationLeakage, numericErrors, hardwareSoC, injection]
 vulClasses = [resourceManagement, bufferErrors, PPAC, informationLeakage, numericErrors, hardwareSoC, injection]
 # List the vulClasses whose tests are to be executed.
 # Choose from: [bufferErrors, PPAC, resourceManagement, informationLeakage, numericErrors, hardwareSoC, injection]
 checkAgainstValidScores = Yes
-# Checks the scores validity against the pre-coded expected results.  Only applicable when binarySource==GFE. 
+# Checks the scores validity against the pre-coded expected results. Only applicable when binarySource==GFE.
 useCustomCWEsConfigsPath = Yes
 # If 'No', then the files in `${repo}/configSecurityTests` will be used by default.
-pathToCustomCWEsConfigs = /home/bed22/ssith/BESSPIN-Tool-Suite/configSecurityTests/cheri-qemu
+pathToCustomCWEsConfigs = %%BESSPIN_TOOL_SUITE_DIR%%/configSecurityTests/cheri-p2
 # The path to the directory containing the CWEs config files
 useCustomScoring = Yes
 # Load the settings in the [customizedScoring] section below.
@@ -183,11 +180,11 @@ pathToCustomMakefile = /path/to/Makefile
 # The path to the custom makefile. 
 useCustomClang = Yes
 # Use a custom Clang binary.
-pathToCustomClang = /home/bed22/cheri/output/sdk/bin/clang
+pathToCustomClang = %%CHERI_DIR%%/output/sdk/bin/clang
 # The path to the custom Clang binary (passed to make as CLANG).
 useCustomSysroot = Yes
 # Use a custom sysroot.
-pathToCustomSysroot = /home/bed22/cheri/output/sdk/sysroot-riscv64-purecap
+pathToCustomSysroot = %%CHERI_DIR%%/output/sdk/sysroot-riscv64-purecap
 # The path to the custom sysroot directory (passed to make SYSROOT).
 gccDebian = default
 # [ default | linux9.2 | bareMetal8.3 | bareMetal9.2 ]
