@@ -109,6 +109,9 @@ def scoreTest(logTest):
         score = SCORES.HIGH
     elif ((log.find('TEST PASSED') >= 0) or (log.find('Illegal instruction') >= 0)):
         score = SCORES.NONE
+    elif log.find('<TIMEOUT>') >= 0:
+        # Treat timeouts as DoS and thus vulnerable
+        score = SCORES.HIGH
     else:
         score = SCORES.FAIL
     return adjustToCustomScore(log.splitlines(),score)
