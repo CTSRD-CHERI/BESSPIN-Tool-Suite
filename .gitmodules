@@ -10,3 +10,6 @@
 [submodule "FreeRTOS"]
 	path = FreeRTOS
 	url = ../BESSPIN-FreeRTOS.git
+[submodule "ecats-phase3-evaluation"]
+	path = ecats-phase3-evaluation
+	url = git@github.com:CTSRD-CHERI/ecats-phase3-evaluation.git

@@ -217,6 +217,13 @@
                     },
                     "bluespec_p3" : {
                         "FreeBSD" : "notOnAWS"
+                    },
+                    "cheri_p2" : {
+                        "FreeBSD" : "connectal",
+                        "FreeRTOS" : "notOnAWS"
+                    },
+                    "cheri_p3" : {
+                        "FreeBSD" : "notOnAWS"
                     }
                 }
             }

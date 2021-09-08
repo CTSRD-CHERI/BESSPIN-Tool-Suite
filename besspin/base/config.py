@@ -89,8 +89,11 @@ def loadConfiguration(configFile):
 @decorate.debugWrap
 def setExtraTargetSettings(targetId=None):
     # Get the XLEN and processor flavor
-    procMatch = re.match(r"^(?P<procFlavor>chisel|bluespec)_p(?P<procLevel>[1-3])$",getSetting('processor', targetId=targetId))
+    procMatch = re.match(r"^(?P<procFlavor>cheri|chisel|bluespec)_p(?P<procLevel>[1-3])$",getSetting('processor', targetId=targetId))
     if (procMatch):
+        flavor = procMatch.group('procFlavor')
+        if flavor == "cheri":
+            flavor = "bluespec"
         setSetting('procFlavor', procMatch.group('procFlavor'), targetId=targetId)
         setSetting('procLevel', f"p{procMatch.group('procLevel')}", targetId=targetId)
         if (procMatch.group('procLevel') == '1'):
