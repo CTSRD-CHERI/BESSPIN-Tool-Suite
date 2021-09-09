@@ -18,14 +18,21 @@ def prepareOsImage (targetId=None):
 
     # setup os image and extra images
     if isEqSetting('binarySource', 'SRI-Cambridge',targetId=targetId):
-        if isEqSetting('target', 'qemu', targetId=targetId):
+        if isEnabled('useCustomBBL',targetId=targetId):
+            # or should this be osImagesDir/basename(pathToCustomBBL)?
+            osImageElf = getSetting('pathToCustomBBL',targetId=targetId)
+        elif isEqSetting('target', 'qemu', targetId=targetId):
             osImageElf = os.path.join(osImagesDir,f"bbl-riscv64cheri-virt-fw_jump.bin")
         else:
             osImageElf = os.path.join(osImagesDir,f"bbl-cheri.elf")
         setSetting('osImageElf',osImageElf,targetId=targetId)
-        imageVariantSuffix = '' if (isEqSetting('sourceVariant','default',targetId=targetId)) else f"-{getSetting('sourceVariant',targetId=targetId)}"
-        setSetting('SRI-Cambridge-imageVariantSuffix',imageVariantSuffix,targetId=targetId)
-        osImageExtraElf = os.path.join(osImagesDir,f"kernel-cheri{imageVariantSuffix}.elf")
+        if isEnabled('useCustomOsImage',targetId=targetId):
+            # or should this be osImagesDir/basename(pathToCustomBBL)?
+            osImageExtraElf = getSetting('pathToCustomOsImage',targetId=targetId)
+        else:
+            imageVariantSuffix = '' if (isEqSetting('sourceVariant','default',targetId=targetId)) else f"-{getSetting('sourceVariant',targetId=targetId)}"
+            setSetting('SRI-Cambridge-imageVariantSuffix',imageVariantSuffix,targetId=targetId)
+            osImageExtraElf = os.path.join(osImagesDir,f"kernel-cheri{imageVariantSuffix}.elf")
         setSetting('osImageExtraElf', osImageExtraElf, targetId=targetId)
     else:
         osImageElf = os.path.join(osImagesDir,f"{getSetting('osImage',targetId=targetId)}.elf")
@@ -323,12 +330,16 @@ def prepareBusybox(targetId=None):
 @decorate.debugWrap
 def selectImagePaths(targetId=None):
     if isEnabled('useCustomOsImage',targetId=targetId):
+        imagePaths = []
+        if isEqSetting('binarySource', 'SRI-Cambridge',targetId=targetId) and isEnabled('useCustomBBL',targetId=targetId):
+            imagePaths.append(getSetting('pathToCustomBBL',targetId=targetId))
         # We need to make sure the name is right
         tempPath = os.path.join(getSetting('workDir'),f'tmp{targetId}')
         mkdir (tempPath,exitIfExists=False)
         tempImagePath = os.path.join(tempPath,os.path.basename(getSetting('osImageElf',targetId=targetId)))
         cp (getSetting('pathToCustomOsImage',targetId=targetId), tempImagePath)
-        return [tempImagePath]
+        imagePaths.append(tempImagePath)
+        return imagePaths
     else:
         imageType = getSetting('target',targetId=targetId) if (getSetting('target',targetId=targetId)!='awsf1') else getSetting('pvAWS',targetId=targetId)
         if isEqSetting('binarySource','GFE',targetId=targetId):

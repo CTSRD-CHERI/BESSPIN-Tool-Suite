@@ -80,6 +80,15 @@
             "choices" : [ "JTAG", "netboot" ]
         },
         {
+            "name" : "useCustomBBL",
+            "type" : "boolean"
+        },
+        {
+            "name" : "pathToCustomBBL",
+            "type" : "filePath",
+            "condition" : "useCustomBBL"
+        },
+        {
             "name" : "useCustomOsImage",
             "type" : "boolean"
         },

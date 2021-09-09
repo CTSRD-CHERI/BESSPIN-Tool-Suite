@@ -58,6 +58,10 @@ osImage = FreeRTOS
 # [ debian | FreeRTOS | FreeBSD | busybox(limited) ]
 elfLoader = netboot
 # [ JTAG | netboot ]
+useCustomBBL = No
+# Source of seperate BBL: If 'No', Nix/BESSPIN-LFS will be used.
+pathToCustomBBL = /path/to/bbl
+# Path to the BBL elf file in case 'useCustomBBL' is set to Yes.
 useCustomOsImage = No
 # Source of the OS image: If 'No', Nix/BESSPIN-LFS will be used.
 pathToCustomOsImage = /path/to/image

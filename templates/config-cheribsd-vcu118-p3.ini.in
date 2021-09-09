@@ -58,10 +58,13 @@ osImage = FreeBSD
 # [ debian | FreeRTOS | FreeBSD | busybox(limited) ]
 elfLoader = JTAG
 # [ JTAG | netboot ]
-useCustomOsImage = No
+useCustomBBL = Yes
+# Source of seperate BBL: If 'No', Nix/BESSPIN-LFS will be used.
+pathToCustomBBL = %%BESSPIN_TOOL_SUITE_DIR%%/ecats-phase3-evaluation/bbl-cheri
+# Path to the BBL elf file in case 'useCustomBBL' is set to Yes.
+useCustomOsImage = Yes
 # Source of the OS image: If 'No', Nix/BESSPIN-LFS will be used.
-pathToCustomOsImage = /path/to/image
-# Path to the osImage in case 'useCustomOsImage' is set to Yes.
+pathToCustomOsImage = %%BESSPIN_TOOL_SUITE_DIR%%/ecats-phase3-evaluation/besspin-kernel-cheri-temporal.elf
 useCustomProcessor = Yes
 # Source of the processor files: If 'No', Nix/BESSPIN-LFS will be used.
 pathToCustomProcessorSource = %%BESSPIN_TOOL_SUITE_DIR%%/ecats-phase3-evaluation/bitstreams
