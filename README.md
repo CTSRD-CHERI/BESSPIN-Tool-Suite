@@ -47,6 +47,7 @@ To clone the repo and start `the nix-shell`, please use:
 git clone git@github.com:GaloisInc/BESSPIN-Tool-Suite.git
 cd BESSPIN-Tool-Suite
 ./utils/init_submodules.sh
+./utils/mk-configs.sh
 nix-shell
 ```
 
@@ -67,6 +68,17 @@ Alternatively, there is a docker container that has the Nix store populated, and
 ```
 
 ---
+
+## SRI-Cambridge CHERI setup ##
+
+```
+mkdir ~/cheri
+cd ~/cheri
+git clone git@github.com:CTSRD-CHERI/cheribuild.git
+mkdir -p ~/bin
+ln -s ~/cheri/cheribuild/cheribuild.py ~/bin/cheribuild
+cheribuild -d cheribsd-riscv64-purecap
+```
 
 ## Usage ##
 
