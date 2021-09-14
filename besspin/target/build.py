@@ -403,7 +403,7 @@ def importImage(targetId=None):
                 warnAndLog(f"<importImage>: Netboot is not needed in flash modes.",doPrint=False)
                 setSetting('elfLoader','JTAG',targetId=targetId)
             else:
-                if (isEqSetting('processor','bluespec_p3',targetId=targetId)):
+                if (isEqSetting('processor','bluespec_p3',targetId=targetId) or isEqSetting('processor','cheri_p3',targetId=targetId)):
                     if (isEnabled('useCustomProcessor',targetId=targetId) or (not isEqSetting('binarySource','GFE',targetId=targetId))):
                         warnAndLog(f"<importImage>: Using netboot on GFE <bluespec_p3> is not currently supported. "
                             "Please use JTAG if booting fails.")

@@ -94,7 +94,7 @@ class fpgaTarget(object):
 
         self.gdbProgStart(elfPath,elfLoadTimeout,extraElfPath=extraElfPath) #releasing the openocd lock happens here
         
-        if ((self.processor=='bluespec_p3') and (self.target=='vcu118') and (self.elfLoader=='JTAG')):
+        if ((self.processor=='bluespec_p3' or self.processor=='cheri_p3') and (self.target=='vcu118') and (self.elfLoader=='JTAG')):
             _,wasTimeout,_ = self.expectFromTarget("bbl loader", f"attempt to boot {self.processor}",
                 exitOnError=False, timeout=15, issueInterrupt=False,
                 suppressWarnings=True, sshRetry=False)
@@ -160,7 +160,7 @@ class fpgaTarget(object):
 
             if (not self.flashMode): #No need to load when flash
                 self.gdbLoad (elfLoadTimeout=elfLoadTimeout,extraElfPath=extraElfPath)
-                if (self.processor=='bluespec_p3'):
+                if (self.processor=='bluespec_p3' or self.processor=='cheri_p3'):
                     time.sleep(3) # Bluespec_p3 needs time here before being able to properly continue.
         elif (self.useOpenocd() and mainProg):
             getSetting('openocdLock').release()
@@ -243,14 +243,14 @@ class fpgaTarget(object):
 
         bluespecExtraUnixCommands = ["set $a0 = 0", "set $a1 = 0x70000020"]
 
-        if (self.flashMode and (self.procFlavor=='bluespec') and (self.xlen==64)): 
+        if (self.flashMode and (self.procFlavor=='bluespec' or self.procFlavor=='cheri') and (self.xlen==64)):
             #For bluespec_p2 and bluespec_p3, we need to explicitly instruct the fpga to execute the beginning of the flash
             t0pcSetCommands = ["set $t0 = 0x44000000", "p $pc = 0x44000000"]
             self.seqGdbCommands(bluespecExtraUnixCommands + t0pcSetCommands, sleepTime=0.5)
             self.continueGdb()
             self.interruptGdb()
             self.seqGdbCommands(t0pcSetCommands, sleepTime=0.5)
-        elif (self.processor=='bluespec_p3'): #Already done in flash mode
+        elif (self.processor=='bluespec_p3' or self.processor=='cheri_p3'): #Already done in flash mode
             self.seqGdbCommands(bluespecExtraUnixCommands)
             time.sleep(2)
 
@@ -259,12 +259,12 @@ class fpgaTarget(object):
             self.gdbDetach()
             # Re-connect
             self.gdbConnect()
-            if (self.processor=='bluespec_p3'):
+            if (self.processor=='bluespec_p3' or self.processor=='cheri_p3'):
                 self.seqGdbCommands(bluespecExtraUnixCommands)
                 time.sleep(2)
 
             if ((not isRepeated) and (self.osImage=='FreeRTOS')):
-                if (self.procFlavor=='bluespec'):
+                if (self.procFlavor=='bluespec' or self.procFlavor=='cheri'):
                     self.softReset(isRepeated=True)
 
     @decorate.debugWrap

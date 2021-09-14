@@ -396,7 +396,7 @@ class commonTarget():
                 self.runCommand("chmod +x addEntropyDebian.riscv")
                 self.ensureCrngIsUp () #check we have enough entropy for ssh
 
-            if ((self.processor=='bluespec_p3') and isEqSetting('mode','evaluateSecurityTests')):
+            if ((self.processor=='bluespec_p3' or self.processor=='cheri_p3') and isEqSetting('mode','evaluateSecurityTests')):
                 self.openSshConn()
 
         elif (self.osImage=='FreeBSD'):
@@ -641,7 +641,7 @@ class commonTarget():
         "            idxEndsWith: The index of the endsWith received. If endsWith was a string, this would be 0. -1 on time-out.
         """
         process = self.process if process is None else process
-        if (self.processor=='bluespec_p3'):
+        if (self.processor=='bluespec_p3' or self.processor=='cheri_p3'):
             timeout += 60
 
         if (isEnabled('isUnix',targetId=self.targetId) or sendToNonUnix):
@@ -728,7 +728,7 @@ class commonTarget():
         def checksumTarget(f):
             shaSumRX = None
             if (self.osImage=='debian'):
-                timeoutSha = 180 if (self.processor=='bluespec_p3') else 120
+                timeoutSha = 180 if (self.processor=='bluespec_p3' or self.processor=='cheri_p3') else 120
                 retShaRX = self.runCommand(f"sha256sum {f}",timeout=timeoutSha)[1]
             elif (self.osImage=='FreeBSD'):
                 retShaRX = self.runCommand(f"sha256 {f}",timeout=120)[1]
@@ -861,7 +861,7 @@ class commonTarget():
             self.sendFile (getSetting('buildDir',targetId=self.targetId),self.tarballName,timeout=timeout)
         #---untar
         if (self.osImage=='debian'):
-            untarProcess = None if (self.processor!='bluespec_p3') else self.ttyProcess
+            untarProcess = None if (self.processor!='bluespec_p3' or self.processor=='cheri_p3') else self.ttyProcess
             self.runCommand(f"tar xvf {getSetting('tarballName')} --warning=no-timestamp",
                 erroneousContents=['gzip:','Error','tar:','Segmentation fault'],timeout=timeout, process=untarProcess)
         elif (self.osImage=='FreeBSD'):
@@ -1182,7 +1182,7 @@ class commonTarget():
                 textBack += self.keyboardInterrupt (exitOnError=True, process=process) if issueInterrupt else ""
             return [textBack, True, -1]
         except Exception as exc:
-            if ((self.processor=='bluespec_p3') and (exc.__class__ == pexpect.EOF) 
+            if ((self.processor=='bluespec_p3' or self.processor=='cheri_p3') and (exc.__class__ == pexpect.EOF)
                     and (sshRetry) and (self.isSshConn)):
                 warnAndLog(f"{self.targetIdInfo}SSH connection was unexpectedly dropped. Trying to reconnect...")
                 self.openSshConn(userName='root' if self.isCurrentUserRoot else self.userName)
@@ -1214,7 +1214,7 @@ class commonTarget():
                 endsWith = 'Power off'
             else:
                 endsWith = pexpect.EOF
-            timeout = 120 if (self.processor=='bluespec_p3') else 60
+            timeout = 120 if (self.processor=='bluespec_p3' or self.processor=='cheri_p3') else 60
             self.runCommand(poweroffCommand[self.osImage],endsWith=endsWith,suppressErrors=True)
             if (self.onlySsh):
                 self.closeSshConn()
@@ -1423,7 +1423,7 @@ class commonTarget():
         self.isSshRootEnabled = True
         if (switchUsers):
             self.switchUser() #switch back
-        if ((self.processor == 'bluespec_p3') 
+        if ((self.processor == 'bluespec_p3' or self.processor=='cheri_p3')
             or ((self.target == 'awsf1') and (self.osImage == 'FreeBSD'))): #needs time to take effect
             time.sleep(15)
 
