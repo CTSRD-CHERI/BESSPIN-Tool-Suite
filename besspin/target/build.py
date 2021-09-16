@@ -206,6 +206,12 @@ def buildFreeRTOS(doPrint=True, extraEnvVars=[], targetId=None, buildDir=None):
         envVars.append(f"PROC_LEVEL={getSetting('procLevel',targetId=targetId)}")
         envVars.append(f"PROC_FLAVOR={getSetting('procFlavor',targetId=targetId)}")
         envVars.append(f"USE_CLANG={'yes' if (isEqSetting('cross-compiler','Clang')) else 'no'}")
+        if isEqSetting('binarySource', 'SRI-Cambridge',targetId=targetId):
+            envVars.append(f"CHERI=1")
+        if (isEnabled('useCustomCompiling') and
+            isEnabledDict('customizedCompiling','useCustomClang')
+            ):
+            envVars.append(f"CLANG={getSettingDict('customizedCompiling','pathToCustomClang')}")
         if isEqSetting('target','qemu',targetId=targetId):
             envVars.append(f"PROJ_NAME=main_besspin")
         else:
@@ -248,7 +254,9 @@ def buildFreeRTOS(doPrint=True, extraEnvVars=[], targetId=None, buildDir=None):
             dockerToolchainImage = None
             dockerExtraMounts = {}
             envVars.append(f"INC_BESSPIN_TOOL_SUITE={buildDir}")
-            if (isEqSetting('cross-compiler','Clang')):
+            if (isEnabledDict('customizedCompiling','useCustomSysroot')):
+                envVars.append(f"SYSROOT_DIR={getSettingDict('customizedCompiling','pathToCustomSysroot')}")
+            elif (isEqSetting('cross-compiler','Clang')):
                 # check that the sysroot env variable exists:
                 sysRootEnv = getSettingDict('nixEnv',['FreeRTOS', 'clang-sysroot', str(getSetting('xlen',targetId=targetId))])
                 if (sysRootEnv not in os.environ):
