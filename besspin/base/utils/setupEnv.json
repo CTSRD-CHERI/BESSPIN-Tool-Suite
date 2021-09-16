@@ -285,7 +285,7 @@
         {
             "name" : "FreeRTOSprojNameNonQemu",
             "type" : "string",
-            "val" : "FreeRTOS/Demo/RISC-V_Galois_P1"
+            "val" : "FreeRTOS/Demo/RISC-V_Galois_demo"
         },
         {
             "name" : "FreeRTOSprojNameQemu",
