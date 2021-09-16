@@ -11,6 +11,7 @@ QEMU_FPGA_LOOKFOR  = [
             # Four possibilities in the next two dimensions:
             # If printed both "TEST COMPLETED" and "SEGMENTATION FAULT" (in debian) --> consider it a trap.
             # If timed out, but idle breakpoint (in FreeRTOS) --> consider it a trap
+            ('CAUGHT', ['<GDB-SIGTRAP>']),
             ('INVALID', ['TEST INVALID']),
             ('TRAPPED', ['Segmentation fault', '<QEMU ABORTED>', '<GDB-SIGTRAP>', '<GDB-IDLE-BREAKPOINT>']),
             ('COMPLETED', ['TEST COMPLETED']),
@@ -52,6 +53,8 @@ def scoreLog(logFile, lookfor):
     logSymbol = triage(logFile,lookfor)
     if (logSymbol == 'INVALID'):
         return (SCORES.CALL_ERR, logSymbol)
+    elif (logSymbol == 'CAUGHT'):
+        thisScore = SCORES.NONE
     elif (logSymbol in ['COMPLETED', 'TIMED OUT', 'TRAPPED']):
         thisScore = SCORES.HIGH
     else:
