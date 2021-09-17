@@ -126,7 +126,8 @@ The buffer errors class has the following additional parameters:
 These are the special known instructions:   
 - LMCO P1: Add `exception_handler` to `funcCheckpoints`.
 - LMCO P2: Add `SSITH HARD` to `stdoutKeywords`.
-- SRI-Cambridge P2: Add `security exception`, `Signal 34`, and 'USAGE ERROR:' to `stdoutKeywords`.
+- SRI-Cambridge FreeBSD: Add `security exception`, `Signal 34`, and 'USAGE ERROR:' to `stdoutKeywords`.
+- SRI-Cambridge FreeRTOS: Add `SIGTRAP`to `gdbKeywords`.
 
 
 ### Compiling
