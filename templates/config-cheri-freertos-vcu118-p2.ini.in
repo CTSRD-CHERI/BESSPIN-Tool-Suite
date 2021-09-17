@@ -159,7 +159,7 @@ instancesPerTestPart = 1
 [customizedScoring]
 stdoutKeywords = [security exception, Signal 34, USAGE ERROR:]
 # List of keywords (comma separated, white spaces) in stdout that means that the processor has detected a violation.
-gdbKeywords = []
+gdbKeywords = [SIGTRAP]
 # List of keywords (comma separated, white spaces) in GDB output that means that the processor has detected a violation.
 funcCheckpoints = []
 # List of functions/methods/interrupts (comma separated, white spaces) reaching which means that the processor has detected a violation.
