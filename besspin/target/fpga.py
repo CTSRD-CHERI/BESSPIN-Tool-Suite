@@ -77,10 +77,10 @@ class fpgaTarget(object):
             openocdExtraCmds = (f"set _CHIPNAME riscv{self.targetSuffix}; gdb_port {self.gdbPort}; "
                 f"telnet_port {self.openocdPort}{self.getOpenocdCustomCfg(isReload=isReload)}")
             printAndLog(f"{self.targetIdInfo} openocdExtraCmds = {openocdExtraCmds}",doPrint=False)
+            openocdCmd = f"openocd --command '{openocdExtraCmds}' -f {openocdCfg}"
+            printAndLog(openocdCmd, doPrint=False)
             try:
-                self.openocdProcess = pexpect.spawn(
-                    f"openocd --command '{openocdExtraCmds}' -f {openocdCfg}",
-                        logfile=self.fOpenocdOut, timeout=15, echo=False)
+                self.openocdProcess = pexpect.spawn(openocdCmd, logfile=self.fOpenocdOut, timeout=15, echo=False)
                 self.openocdProcess.expect(f"Listening on port {self.openocdPort} for telnet", timeout=15)
             except Exception as exc:
                 getSetting('openocdLock').release()
