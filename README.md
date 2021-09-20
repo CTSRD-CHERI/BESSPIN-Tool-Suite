@@ -77,7 +77,9 @@ cd ~/cheri
 git clone git@github.com:CTSRD-CHERI/cheribuild.git
 mkdir -p ~/bin
 ln -s ~/cheri/cheribuild/cheribuild.py ~/bin/cheribuild
-cheribuild -d cheribsd-riscv64-purecap
+cheribuild -d --only-dependencies run-riscv64-purecap
+cheribuild -d --only-dependencies freertos-baremetal-riscv64-purecap
+cheribuild newlib-baremetal-riscv32-purecap compiler-rt-builtins-baremetal-riscv32-purecap
 ```
 
 ## Usage ##
