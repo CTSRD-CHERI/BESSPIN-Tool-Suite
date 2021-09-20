@@ -57,6 +57,10 @@ processor = bluespec_p2
 osImage = FreeBSD
 # [ debian | FreeRTOS | FreeBSD | busybox(limited) ]
 elfLoader = netboot
+useCustomBBL = No
+# Source of seperate BBL: If 'No', Nix/BESSPIN-LFS will be used.
+pathToCustomBBL = /path/to/bbl
+# Path to the BBL elf file in case 'useCustomBBL' is set to Yes.
 # [ JTAG | netboot ]
 useCustomOsImage = No
 # Source of the OS image: If 'No', Nix/BESSPIN-LFS will be used.
