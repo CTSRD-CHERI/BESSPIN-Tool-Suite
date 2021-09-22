@@ -49,9 +49,14 @@ void message_buffer_test(void) {
     int_fn_union data = { .fn = benign };
 
     // Create a message buffer large enough to hold uintptr_t, including message
-    // header.
+    // header.  The header needs to contain a size_t, but on CHERI it must also include padding
+    // for alignment to allow capabilities to be passed.
+    size_t mb_header_space = sizeof(size_t);
+#ifdef __CHERI_PURE_CAPABILITY__
+    mb_header_space += sizeof(void *) - 1;
+#endif
     MessageBufferHandle_t msg_buf =
-        xMessageBufferCreate(sizeof(size_t) + sizeof(uintptr_t));
+        xMessageBufferCreate(mb_header_space + sizeof(uintptr_t));
     if (msg_buf == NULL) {
         printf("<INVALID>\n");
         printf("Failed to create message buffer.\n");
