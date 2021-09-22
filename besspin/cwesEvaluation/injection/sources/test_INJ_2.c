@@ -85,7 +85,7 @@ static bool send_buffer_increment(const MessageBufferHandle_t *msg_buf,
                                            0);
     bool did_send = sent_bytes == sizeof(buffer_increment_t);
     if (!did_send) {
-        printf("<INVALID\n");
+        printf("<INVALID>\n");
         printf("Failed to send buffer_increment_t over message buffer\n");
     }
     return did_send;
