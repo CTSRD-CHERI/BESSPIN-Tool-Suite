@@ -179,7 +179,7 @@ static void rtos_test() {
 
     // `trusted` should be exactly after `untrusted1` (accounting for the
     // header for `trusted`).
-    if (trusted != untrusted1 + UNTRUSTED1_SIZE + (BLOCK_HEADER_BYTES / sizeof(size_t*))) {
+    if (trusted != untrusted1 + UNTRUSTED1_SIZE + (BLOCK_HEADER_BYTES / sizeof(*untrusted1))) {
         printf("<INVALID>\n");
         printf("Trusted allocation not immediately after untrusted1\n");
         vPortFree(untrusted1);
