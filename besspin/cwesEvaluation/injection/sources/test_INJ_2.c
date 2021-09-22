@@ -25,7 +25,11 @@
 
 // Size of the header for allocations returned by both malloc on Debian and
 // pvPortMalloc on FreeRTOS.
+#if __riscv_xlen == 64 && defined(__CHERI_PURE_CAPABILITY__)
+#define BLOCK_HEADER_BYTES 32
+#else
 #define BLOCK_HEADER_BYTES 16
+#endif
 
 #ifdef BESSPIN_FREERTOS
 
