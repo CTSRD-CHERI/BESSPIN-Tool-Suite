@@ -39,7 +39,7 @@ void injector(void* params) {
                                            0);
     if (sent_bytes != sizeof(address)) {
         printf("<INVALID>\n");
-        printf("Failed to send address over message buffer\n");
+        printf("Failed to send address over message buffer (sent %zu)\n", sent_bytes);
     }
     vTaskDelete(NULL);
 }
@@ -51,12 +51,9 @@ void message_buffer_test(void) {
     // Create a message buffer large enough to hold uintptr_t, including message
     // header.  The header needs to contain a size_t, but on CHERI it must also include padding
     // for alignment to allow capabilities to be passed.
-    size_t mb_header_space = sizeof(size_t);
-#ifdef __CHERI_PURE_CAPABILITY__
-    mb_header_space += sizeof(void *) - 1;
-#endif
+    // On CHERI this works because the buffer is strongly aligned.
     MessageBufferHandle_t msg_buf =
-        xMessageBufferCreate(mb_header_space + sizeof(uintptr_t));
+        xMessageBufferCreate(sizeof(uintptr_t) + sizeof(uintptr_t));
     if (msg_buf == NULL) {
         printf("<INVALID>\n");
         printf("Failed to create message buffer.\n");

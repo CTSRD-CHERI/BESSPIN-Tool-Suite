@@ -194,7 +194,7 @@ static void rtos_test() {
 
     // Start task
     MessageBufferHandle_t msg_buf =
-        xMessageBufferCreate(2*sizeof(size_t) + 2*sizeof(buffer_increment_t));
+        xMessageBufferCreate(2*(sizeof(uintptr_t) + sizeof(buffer_increment_t)));
     if (msg_buf == NULL) {
         printf("<INVALID>\n");
         printf("Failed to create message buffer.\n");
