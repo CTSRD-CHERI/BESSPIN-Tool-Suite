@@ -250,18 +250,12 @@ class fpgaTarget(object):
             self.continueGdb()
             self.interruptGdb()
             self.seqGdbCommands(t0pcSetCommands, sleepTime=0.5)
-        elif (self.processor=='bluespec_p3' or self.processor=='cheri_p3'): #Already done in flash mode
-            self.seqGdbCommands(bluespecExtraUnixCommands)
-            time.sleep(2)
 
         if (not self.flashMode): #No need in case of flash
             # detach from gdb
             self.gdbDetach()
             # Re-connect
             self.gdbConnect()
-            if (self.processor=='bluespec_p3' or self.processor=='cheri_p3'):
-                self.seqGdbCommands(bluespecExtraUnixCommands)
-                time.sleep(2)
 
             if ((not isRepeated) and (self.osImage=='FreeRTOS')):
                 if (self.procFlavor=='bluespec' or self.procFlavor=='cheri'):
