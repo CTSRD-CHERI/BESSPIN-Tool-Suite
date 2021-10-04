@@ -397,6 +397,11 @@ def buildFreeRTOSTest(test, vulClass, part, testLogFile):
     fPars.write(f"\n#define BESSPIN_TEST_PART {part}\n")
     fPars.close()
 
+    # Allow the test target to be built with additional CFLAGS
+    fEnvMk = ftOpenFile(os.path.join(buildDir,'envBesspin.mk'),'a')
+    fEnvMk.write(f"{os.path.join(buildDir, test).replace('.c','.o')}: _TARGET_CFLAGS=$(TARGET_CFLAGS)")
+    fEnvMk.close()
+
     # Build
     if ((vulClass == "informationLeakage") 
             and (test.split(".c")[0] not in getSettingDict("informationLeakage","nonstandardTests"))):
