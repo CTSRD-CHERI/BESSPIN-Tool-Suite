@@ -5,8 +5,14 @@
 #include <stdio.h>
 #include "parameters.h"
 #ifdef __IEX_GEN__CAPABILITIES__
+#ifdef __FreeBSD__
 #include <machine/cherireg.h>
 #include <cheri/cheric.h>
+#else
+#define	CHERI_PERM_STORE_LOCAL_CAP	(1 << 6)
+#define	CHERI_PERM_GLOBAL		(1 << 0)
+#define	cheri_andperm(x, y)		__builtin_cheri_perms_and((x), (y))
+#endif
 #endif
 
 #ifndef __IEX_GEN__CAPABILITIES__

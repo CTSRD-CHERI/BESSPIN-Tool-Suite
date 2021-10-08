@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef __IEX_GEN__CAPABILITIES__
-#include <cheri/cheric.h>
-#endif
-
 #ifndef __IEX_GEN__CAPABILITIES__
 #ifdef __IEX_GEN__ARRAYS__
 #ifdef __IEX_GEN__STATIC_SECRET__
